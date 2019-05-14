@@ -1,7 +1,7 @@
 {
   "name": "hid",
   "version": "0.0.0",
-  "description": "",
+  "description": "Low-level bindings for USB/Bluetooth hidapi",
   "main": "index.js",
   "publishConfig": {
     "access": "public"
