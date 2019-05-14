@@ -1,5 +1,7 @@
 # `hid`
 
+[![Build Status](https://travis-ci.org/Hyperdivision/hid.svg?branch=master)](https://travis-ci.org/Hyperdivision/hid)
+
 > Low-level bindings for USB/Bluetooth hidapi
 
 ## Usage
@@ -13,10 +15,12 @@ console.log(hid.enumerate(0, 0))
 
 ## API
 
-### `hid.enumerate(vendor_id, product_id)`
+### `const devices = hid.enumerate(vendor_id, product_id)`
 
 Enumerate all connected HID devices, filtered by `vendor_id` and `product_id`.
 Setting these to `0` disables filtering on either.
+
+Returns an array of devices.
 
 ## Install
 
