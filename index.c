@@ -13,15 +13,46 @@
     return NULL; \
   }
 
+#define NAPI_EXTERNAL(name, val) \
+  NAPI_EXTERNAL_CAST(void *, name, val)
+
+#define NAPI_EXTERNAL_CAST(type, name, val) \
+  type name; \
+  if (napi_get_value_external(env, val, (void **) &name) != napi_ok) { \
+    napi_throw_error(env, "EINVAL", "Expected external"); \
+    return NULL; \
+  }
+
+#define NAPI_RETURN_EXTERNAL(name, finalizer, finalizer_hint) \
+  napi_value return_external; \
+  NAPI_STATUS_THROWS(napi_create_external(env, name, finalizer, finalizer_hint, &return_external)) \
+  return return_external;
+
+#define NAPI_ARGV_EXTERNAL(name, i) \
+  NAPI_EXTERNAL(name, argv[i])
+
+#define NAPI_ARGV_EXTERNAL_CAST(type, name, i) \
+  NAPI_EXTERNAL_CAST(type, name, argv[i])
+
+#define THROW_HID_ERROR(handle, condition, default) \
+  if ((condition)) { \
+    char err_mbs_buffer[1024 + 1]; \
+    const wchar_t* err = hid_error(handle); \
+    NAPI_RETURN_THROWS(err == NULL, default); \
+    NAPI_RETURN_THROWS(wcstombs(err_mbs_buffer, err, 1024) < 0, "Failed convert error"); \
+    napi_throw_error(env, NULL, err_mbs_buffer); \
+    return NULL; \
+  }
+
 NAPI_METHOD(enumerate) {
   NAPI_ARGV(2)
   // TODO: Needs type protection, eg. null/undefined
   NAPI_ARGV_INT32(vendor_id, 0)
   NAPI_ARGV_INT32(product_id, 1)
 
-  char wide_buffer[1024 + 1];
+  char mbs_buffer[1024 + 1];
   struct hid_device_info * device = hid_enumerate(vendor_id, product_id);
-
+  struct hid_device_info * list = device;
   napi_value devices;
   NAPI_STATUS_THROWS(napi_create_array(env, &devices))
 
@@ -56,13 +87,13 @@ NAPI_METHOD(enumerate) {
     NAPI_STATUS_THROWS(napi_create_string_utf8(env, "serial_number", NAPI_AUTO_LENGTH, &serial_number_key))
     napi_value serial_number_value;
 
-    if (wcstombs(wide_buffer, device->serial_number, 1024) < 0) {
+    if (wcstombs(mbs_buffer, device->serial_number, 1024) < 0) {
       napi_throw_error(env, NULL, "");
-      hid_free_enumeration(device);
+      hid_free_enumeration(list);
       return NULL;
     }
 
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env, wide_buffer, NAPI_AUTO_LENGTH, &serial_number_value))
+    NAPI_STATUS_THROWS(napi_create_string_utf8(env, mbs_buffer, NAPI_AUTO_LENGTH, &serial_number_value))
     NAPI_STATUS_THROWS(napi_set_property(env, device_obj, serial_number_key, serial_number_value))
 
     napi_value release_number_key;
@@ -75,26 +106,26 @@ NAPI_METHOD(enumerate) {
     NAPI_STATUS_THROWS(napi_create_string_utf8(env, "manufacturer_string", NAPI_AUTO_LENGTH, &manufacturer_string_key))
     napi_value manufacturer_string_value;
 
-    if (wcstombs(wide_buffer, device->manufacturer_string, 1024) < 0) {
+    if (wcstombs(mbs_buffer, device->manufacturer_string, 1024) < 0) {
       napi_throw_error(env, NULL, "");
-      hid_free_enumeration(device);
+      hid_free_enumeration(list);
       return NULL;
     }
 
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env, wide_buffer, NAPI_AUTO_LENGTH, &manufacturer_string_value))
+    NAPI_STATUS_THROWS(napi_create_string_utf8(env, mbs_buffer, NAPI_AUTO_LENGTH, &manufacturer_string_value))
     NAPI_STATUS_THROWS(napi_set_property(env, device_obj, manufacturer_string_key, manufacturer_string_value))
 
     napi_value product_string_key;
     NAPI_STATUS_THROWS(napi_create_string_utf8(env, "product_string", NAPI_AUTO_LENGTH, &product_string_key))
     napi_value product_string_value;
 
-    if (wcstombs(wide_buffer, device->product_string, 1024) < 0) {
+    if (wcstombs(mbs_buffer, device->product_string, 1024) < 0) {
       napi_throw_error(env, NULL, "");
-      hid_free_enumeration(device);
+      hid_free_enumeration(list);
       return NULL;
     }
 
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env, wide_buffer, NAPI_AUTO_LENGTH, &product_string_value))
+    NAPI_STATUS_THROWS(napi_create_string_utf8(env, mbs_buffer, NAPI_AUTO_LENGTH, &product_string_value))
     NAPI_STATUS_THROWS(napi_set_property(env, device_obj, product_string_key, product_string_value))
 
     napi_value usage_page_key;
@@ -118,9 +149,331 @@ NAPI_METHOD(enumerate) {
     NAPI_STATUS_THROWS(napi_set_element(env, devices, i++, device_obj))
   } while ((device = device->next) != NULL);
 
-  hid_free_enumeration(device);
+  hid_free_enumeration(list);
 
   return devices;
+}
+
+void device_finalizer (napi_env env, void* finalize_data, void* finalize_hint) {
+  hid_close((hid_device *) finalize_data);
+}
+
+NAPI_METHOD(open) {
+  NAPI_ARGV(3)
+  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ARGV_INT32(vendor_id, 0)
+  NAPI_ARGV_INT32(product_id, 1)
+  NAPI_ARGV_UTF8(serial_number, 1024 + 1, 2)
+
+  wchar_t wide_buffer[sizeof(wchar_t) * 256 + 1];
+  NAPI_RETURN_THROWS(mbstowcs(wide_buffer, serial_number, 1024) < 0, "Failed to convert serial number")
+
+  hid_device * device = hid_open(vendor_id, product_id, wide_buffer);
+
+  NAPI_RETURN_THROWS(device == NULL, "Failed open device")
+
+  NAPI_RETURN_EXTERNAL(device, device_finalizer, NULL)
+}
+
+NAPI_METHOD(open_path) {
+  NAPI_ARGV(1)
+  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ARGV_UTF8(path, 1024 + 1, 0)
+
+  hid_device * device = hid_open_path(path);
+
+  NAPI_RETURN_THROWS(device == NULL, "Failed open_path device")
+
+  NAPI_RETURN_EXTERNAL(device, device_finalizer, NULL)
+}
+
+NAPI_METHOD(write) {
+  NAPI_ARGV(2)
+  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ARGV_BUFFER_CAST(const unsigned char *, data, 1)
+
+  int n = hid_write(handle, data, data_len);
+
+  THROW_HID_ERROR(handle, n < 0, "Failed write")
+
+  NAPI_RETURN_INT32(n)
+}
+
+NAPI_METHOD(read_timeout) {
+  NAPI_ARGV(3)
+  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
+  NAPI_ARGV_INT32(milliseconds, 2)
+
+  int n = hid_read_timeout(handle, data, data_len, milliseconds);
+
+  THROW_HID_ERROR(handle, n < 0, "Failed read_timeout")
+
+  NAPI_RETURN_INT32(n)
+}
+
+NAPI_METHOD(read) {
+  NAPI_ARGV(2)
+  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
+
+  int n = hid_read(handle, data, data_len);
+
+  THROW_HID_ERROR(handle, n < 0, "Failed read")
+
+  NAPI_RETURN_INT32(n)
+}
+
+typedef struct async_read_request {
+  hid_device * handle;
+  unsigned char * data;
+  size_t data_len;
+  napi_ref cb;
+  int n;
+  napi_async_work task;
+} async_read_request;
+
+void async_read_execute(napi_env env, void* data) {
+  struct async_read_request * req = (async_read_request *)data;
+  req->n = hid_read(req->handle, req->data, req->data_len);
+}
+
+void async_read_complete(napi_env env, napi_status status, void* data) {
+  async_read_request * req = (async_read_request *)data;
+  NAPI_STATUS_THROWS(status);
+
+  napi_value global;
+  NAPI_STATUS_THROWS(napi_get_global(env, &global));
+
+  napi_value argv[2];
+  if (req->n < 0) {
+    // TODO try to read error from hid
+    NAPI_STATUS_THROWS(napi_create_error(env, NULL, "Failed read", &argv[0]));
+    NAPI_STATUS_THROWS(napi_get_undefined(env, &argv[1]));
+  } else {
+    NAPI_STATUS_THROWS(napi_get_null(env, &argv[0]));
+    NAPI_STATUS_THROWS(napi_create_uint32(env, req->n, &argv[1]));
+  }
+
+  napi_value callback;
+  NAPI_STATUS_THROWS(napi_get_reference_value(env, req->cb, &callback));
+
+  napi_value return_val;
+  NAPI_STATUS_THROWS(napi_call_function(env, global, callback, 2, argv, &return_val));
+  NAPI_STATUS_THROWS(napi_delete_reference(env, req->cb));
+  NAPI_STATUS_THROWS(napi_delete_async_work(env, req->task));
+  free(req);
+}
+
+NAPI_METHOD(read_async) {
+  NAPI_ARGV(3)
+  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
+  napi_value cb = argv[2];
+
+  async_read_request * req = (async_read_request *) malloc(sizeof(async_read_request));
+  req->handle = handle;
+  req->data = data;
+  req->data_len = data_len;
+
+  req->n = 0;
+
+  NAPI_STATUS_THROWS(napi_create_reference(env, cb, 1, &req->cb));
+
+  napi_value async_resource_name;
+  NAPI_STATUS_THROWS(napi_create_string_utf8(env, "hid:read_async", NAPI_AUTO_LENGTH, &async_resource_name))
+  napi_async_work task;
+  napi_create_async_work(env, NULL, async_resource_name,
+                                   async_read_execute,
+                                   async_read_complete,
+                                   (void*)req, &req->task);
+
+  NAPI_STATUS_THROWS(napi_queue_async_work(env, req->task))
+
+  return NULL;
+}
+
+typedef struct async_read_timeout_request {
+  hid_device * handle;
+  unsigned char * data;
+  size_t data_len;
+  int milliseconds;
+  napi_ref cb;
+  int n;
+  napi_async_work task;
+} async_read_timeout_request;
+
+void async_read_timeout_execute(napi_env env, void* data) {
+  struct async_read_timeout_request * req = (async_read_timeout_request *)data;
+  req->n = hid_read_timeout(req->handle, req->data, req->data_len, req->milliseconds);
+}
+
+void async_read_timeout_complete(napi_env env, napi_status status, void* data) {
+  async_read_timeout_request * req = (async_read_timeout_request *)data;
+  NAPI_STATUS_THROWS(status);
+
+  napi_value global;
+  NAPI_STATUS_THROWS(napi_get_global(env, &global));
+
+  napi_value argv[2];
+  if (req->n < 0) {
+    // TODO try to read error from hid
+    NAPI_STATUS_THROWS(napi_create_error(env, NULL, "Failed read_timeout", &argv[0]));
+    NAPI_STATUS_THROWS(napi_get_undefined(env, &argv[1]));
+  } else {
+    NAPI_STATUS_THROWS(napi_get_null(env, &argv[0]));
+    NAPI_STATUS_THROWS(napi_create_uint32(env, req->n, &argv[1]));
+  }
+
+  napi_value callback;
+  NAPI_STATUS_THROWS(napi_get_reference_value(env, req->cb, &callback));
+
+  napi_value return_val;
+  NAPI_STATUS_THROWS(napi_call_function(env, global, callback, 2, argv, &return_val));
+  NAPI_STATUS_THROWS(napi_delete_reference(env, req->cb));
+  NAPI_STATUS_THROWS(napi_delete_async_work(env, req->task));
+  free(req);
+}
+
+NAPI_METHOD(read_timeout_async) {
+  NAPI_ARGV(4)
+  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
+  NAPI_ARGV_INT32(milliseconds, 2)
+  napi_value cb = argv[3];
+
+  async_read_timeout_request * req = (async_read_timeout_request *) malloc(sizeof(async_read_timeout_request));
+  req->handle = handle;
+  req->data = data;
+  req->data_len = data_len;
+  req->milliseconds = milliseconds;
+  req->n = 0;
+
+  NAPI_STATUS_THROWS(napi_create_reference(env, cb, 1, &req->cb));
+
+  napi_value async_resource_name;
+  NAPI_STATUS_THROWS(napi_create_string_utf8(env, "hid:read_timeout_async", NAPI_AUTO_LENGTH, &async_resource_name))
+  napi_create_async_work(env, NULL, async_resource_name,
+                                   async_read_timeout_execute,
+                                   async_read_timeout_complete,
+                                   (void*)req, &req->task);
+
+  NAPI_STATUS_THROWS(napi_queue_async_work(env, req->task))
+
+  return NULL;
+}
+
+NAPI_METHOD(set_nonblocking) {
+  NAPI_ARGV(2)
+  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ARGV_INT32(nonblock, 1)
+
+  int res = hid_set_nonblocking(handle, nonblock);
+
+  THROW_HID_ERROR(handle, res < 0, "Failed hid_set_nonblocking")
+
+  return NULL;
+}
+
+NAPI_METHOD(send_feature_report) {
+  NAPI_ARGV(2)
+  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ARGV_BUFFER_CAST(const unsigned char *, data, 1)
+
+  int n = hid_send_feature_report(handle, data, data_len);
+
+  THROW_HID_ERROR(handle, n < 0, "Failed send_feature_report")
+
+  NAPI_RETURN_INT32(n)
+}
+
+NAPI_METHOD(get_feature_report) {
+  NAPI_ARGV(2)
+  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
+
+  int n = hid_get_feature_report(handle, data, data_len);
+
+  THROW_HID_ERROR(handle, n < 0, "Failed get_feature_report")
+
+  NAPI_RETURN_INT32(n)
+}
+
+typedef struct async_get_feature_report_request {
+  hid_device * handle;
+  unsigned char * data;
+  size_t data_len;
+  int milliseconds;
+  napi_ref cb;
+  int n;
+  napi_async_work task;
+} async_get_feature_report_request;
+
+void async_get_feature_report_execute(napi_env env, void* data) {
+  struct async_get_feature_report_request * req = (async_get_feature_report_request *)data;
+  req->n = hid_get_feature_report(req->handle, req->data, req->data_len);
+}
+
+void async_get_feature_report_complete(napi_env env, napi_status status, void* data) {
+  async_get_feature_report_request * req = (async_get_feature_report_request *)data;
+  NAPI_STATUS_THROWS(status);
+
+  napi_value global;
+  NAPI_STATUS_THROWS(napi_get_global(env, &global));
+
+  napi_value argv[2];
+  if (req->n < 0) {
+    // TODO try to read error from hid
+    NAPI_STATUS_THROWS(napi_create_error(env, NULL, "Failed get_feature_report", &argv[0]));
+    NAPI_STATUS_THROWS(napi_get_undefined(env, &argv[1]));
+  } else {
+    NAPI_STATUS_THROWS(napi_get_null(env, &argv[0]));
+    NAPI_STATUS_THROWS(napi_create_uint32(env, req->n, &argv[1]));
+  }
+
+  napi_value callback;
+  NAPI_STATUS_THROWS(napi_get_reference_value(env, req->cb, &callback));
+
+  napi_value return_val;
+  NAPI_STATUS_THROWS(napi_call_function(env, global, callback, 2, argv, &return_val));
+  NAPI_STATUS_THROWS(napi_delete_reference(env, req->cb));
+  NAPI_STATUS_THROWS(napi_delete_async_work(env, req->task));
+  free(req);
+}
+
+NAPI_METHOD(get_feature_report_async) {
+  NAPI_ARGV(3)
+  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
+  napi_value cb = argv[2];
+
+  async_get_feature_report_request * req = (async_get_feature_report_request *) malloc(sizeof(async_get_feature_report_request));
+  req->handle = handle;
+  req->data = data;
+  req->data_len = data_len;
+  req->n = 0;
+
+  NAPI_STATUS_THROWS(napi_create_reference(env, cb, 1, &req->cb));
+
+  napi_value async_resource_name;
+  NAPI_STATUS_THROWS(napi_create_string_utf8(env, "hid:get_feature_report_async", NAPI_AUTO_LENGTH, &async_resource_name))
+  napi_create_async_work(env, NULL, async_resource_name,
+                                   async_get_feature_report_execute,
+                                   async_get_feature_report_complete,
+                                   (void*)req, &req->task);
+
+  NAPI_STATUS_THROWS(napi_queue_async_work(env, req->task))
+
+  return NULL;
 }
 
 NAPI_INIT() {
@@ -130,6 +483,18 @@ NAPI_INIT() {
   }
 
   NAPI_EXPORT_FUNCTION(enumerate);
+  NAPI_EXPORT_FUNCTION(open);
+  NAPI_EXPORT_FUNCTION(open_path);
+  NAPI_EXPORT_FUNCTION(write);
+  NAPI_EXPORT_FUNCTION(read_timeout);
+  NAPI_EXPORT_FUNCTION(read);
+  NAPI_EXPORT_FUNCTION(read_timeout_async);
+  NAPI_EXPORT_FUNCTION(read_async);
+  NAPI_EXPORT_FUNCTION(set_nonblocking);
+  NAPI_EXPORT_FUNCTION(send_feature_report);
+  NAPI_EXPORT_FUNCTION(get_feature_report);
+  NAPI_EXPORT_FUNCTION(get_feature_report_async);
+
 
   NAPI_STATUS_THROWS(napi_add_env_cleanup_hook(env, (void *)hid_exit, NULL));
 }
