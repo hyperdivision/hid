@@ -251,7 +251,9 @@ void async_read_complete(napi_env env, napi_status status, void* data) {
   napi_value argv[2];
   if (req->n < 0) {
     // TODO try to read error from hid
-    NAPI_STATUS_THROWS(napi_create_error(env, NULL, "Failed read", &argv[0]));
+    napi_value err_msg;
+    NAPI_STATUS_THROWS(napi_create_string_utf8(env, "Failed read", NAPI_AUTO_LENGTH, &err_msg));
+    NAPI_STATUS_THROWS(napi_create_error(env, NULL, err_msg, &argv[0]));
     NAPI_STATUS_THROWS(napi_get_undefined(env, &argv[1]));
   } else {
     NAPI_STATUS_THROWS(napi_get_null(env, &argv[0]));
@@ -286,7 +288,7 @@ NAPI_METHOD(read_async) {
 
   napi_value async_resource_name;
   NAPI_STATUS_THROWS(napi_create_string_utf8(env, "hid:read_async", NAPI_AUTO_LENGTH, &async_resource_name))
-  napi_async_work task;
+
   napi_create_async_work(env, NULL, async_resource_name,
                                    async_read_execute,
                                    async_read_complete,
@@ -322,7 +324,9 @@ void async_read_timeout_complete(napi_env env, napi_status status, void* data) {
   napi_value argv[2];
   if (req->n < 0) {
     // TODO try to read error from hid
-    NAPI_STATUS_THROWS(napi_create_error(env, NULL, "Failed read_timeout", &argv[0]));
+    napi_value err_msg;
+    NAPI_STATUS_THROWS(napi_create_string_utf8(env, "Failed read_timeout", NAPI_AUTO_LENGTH, &err_msg));
+    NAPI_STATUS_THROWS(napi_create_error(env, NULL, err_msg, &argv[0]));
     NAPI_STATUS_THROWS(napi_get_undefined(env, &argv[1]));
   } else {
     NAPI_STATUS_THROWS(napi_get_null(env, &argv[0]));
@@ -432,7 +436,9 @@ void async_get_feature_report_complete(napi_env env, napi_status status, void* d
   napi_value argv[2];
   if (req->n < 0) {
     // TODO try to read error from hid
-    NAPI_STATUS_THROWS(napi_create_error(env, NULL, "Failed get_feature_report", &argv[0]));
+    napi_value err_msg;
+    NAPI_STATUS_THROWS(napi_create_string_utf8(env, "Failed get_feature_report", NAPI_AUTO_LENGTH, &err_msg));
+    NAPI_STATUS_THROWS(napi_create_error(env, NULL, err_msg, &argv[0]));
     NAPI_STATUS_THROWS(napi_get_undefined(env, &argv[1]));
   } else {
     NAPI_STATUS_THROWS(napi_get_null(env, &argv[0]));
