@@ -45,6 +45,9 @@
     return NULL; \
   }
 
+#define NAPI_ASSERT_ARGV_MIN(n) \
+  NAPI_RETURN_THROWS(argc < n, "Unsufficient arguments provided. Expected " #n)
+
 NAPI_METHOD(enumerate) {
   NAPI_ARGV(2)
   // TODO: Needs type protection, eg. null/undefined
@@ -161,7 +164,7 @@ void device_finalizer (napi_env env, void* finalize_data, void* finalize_hint) {
 
 NAPI_METHOD(open) {
   NAPI_ARGV(3)
-  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_INT32(vendor_id, 0)
   NAPI_ARGV_INT32(product_id, 1)
   NAPI_ARGV_UTF8(serial_number, 1024 + 1, 2)
@@ -178,7 +181,7 @@ NAPI_METHOD(open) {
 
 NAPI_METHOD(open_path) {
   NAPI_ARGV(1)
-  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ASSERT_ARGV_MIN(1)
   NAPI_ARGV_UTF8(path, 1024 + 1, 0)
 
   hid_device * device = hid_open_path(path);
@@ -190,7 +193,7 @@ NAPI_METHOD(open_path) {
 
 NAPI_METHOD(write) {
   NAPI_ARGV(2)
-  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
   NAPI_ARGV_BUFFER_CAST(const unsigned char *, data, 1)
 
@@ -203,7 +206,7 @@ NAPI_METHOD(write) {
 
 NAPI_METHOD(read_timeout) {
   NAPI_ARGV(3)
-  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ASSERT_ARGV_MIN(3)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
   NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
   NAPI_ARGV_INT32(milliseconds, 2)
@@ -217,7 +220,7 @@ NAPI_METHOD(read_timeout) {
 
 NAPI_METHOD(read) {
   NAPI_ARGV(2)
-  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
   NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
 
@@ -273,6 +276,7 @@ void async_read_complete(napi_env env, napi_status status, void* data) {
 
 NAPI_METHOD(read_async) {
   NAPI_ARGV(3)
+  NAPI_ASSERT_ARGV_MIN(3)
   // TODO: Needs type protection, eg. null/undefined
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
   NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
@@ -346,7 +350,7 @@ void async_read_timeout_complete(napi_env env, napi_status status, void* data) {
 
 NAPI_METHOD(read_timeout_async) {
   NAPI_ARGV(4)
-  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ASSERT_ARGV_MIN(4)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
   NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
   NAPI_ARGV_INT32(milliseconds, 2)
@@ -375,7 +379,7 @@ NAPI_METHOD(read_timeout_async) {
 
 NAPI_METHOD(set_nonblocking) {
   NAPI_ARGV(2)
-  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
   NAPI_ARGV_INT32(nonblock, 1)
 
@@ -388,7 +392,7 @@ NAPI_METHOD(set_nonblocking) {
 
 NAPI_METHOD(send_feature_report) {
   NAPI_ARGV(2)
-  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
   NAPI_ARGV_BUFFER_CAST(const unsigned char *, data, 1)
 
@@ -401,6 +405,7 @@ NAPI_METHOD(send_feature_report) {
 
 NAPI_METHOD(get_feature_report) {
   NAPI_ARGV(2)
+  NAPI_ASSERT_ARGV_MIN(2)
   // TODO: Needs type protection, eg. null/undefined
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
   NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
@@ -458,7 +463,7 @@ void async_get_feature_report_complete(napi_env env, napi_status status, void* d
 
 NAPI_METHOD(get_feature_report_async) {
   NAPI_ARGV(3)
-  // TODO: Needs type protection, eg. null/undefined
+  NAPI_ASSERT_ARGV_MIN(3)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
   NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
   napi_value cb = argv[2];
