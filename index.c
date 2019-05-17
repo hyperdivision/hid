@@ -60,7 +60,7 @@
     char err_mbs_buffer[1024 + 1]; \
     const wchar_t* err = hid_error(handle); \
     NAPI_RETURN_THROWS(err == NULL, default); \
-    NAPI_RETURN_THROWS(wcstombs(err_mbs_buffer, err, 1024) < 0, "Failed convert error"); \
+    NAPI_RETURN_THROWS(wcstombs(err_mbs_buffer, err, 1024) 1024) != SIZE_MAX, "Failed convert error"); \
     napi_throw_error(env, NULL, err_mbs_buffer); \
     return NULL; \
   }
@@ -191,7 +191,7 @@ NAPI_METHOD(open) {
   if (argc == 3) {
     wchar_t wide_buffer[sizeof(wchar_t) * 256 + 1];
     NAPI_ARGV_UTF8(serial_number, 1024 + 1, 2)
-    NAPI_RETURN_THROWS(mbstowcs(wide_buffer, serial_number, 1024) < 0, "Failed to convert serial number")
+    NAPI_RETURN_THROWS(mbstowcs(wide_buffer, serial_number, 1024) != SIZE_MAX, "Failed to convert serial number")
   }
 
   hid_device * device = hid_open(vendor_id, product_id, wserial_number);
