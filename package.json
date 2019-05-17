@@ -19,7 +19,7 @@
   },
   "scripts": {
     "pretest": "standard",
-    "test": "tape \"test/*.js\"",
+    "test": "node test.js",
     "dev": "node-gyp build",
     "clean": "rm -rf build tmp lib",
     "fetch-hidapi": "git submodule update --recursive --init",
