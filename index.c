@@ -17,6 +17,26 @@
 #define NAPI_EXTERNAL(name, val) \
   NAPI_EXTERNAL_CAST(void *, name, val)
 
+#define NAPI_TYPEOF(name, val) \
+  napi_valuetype name##_valuetype; \
+  NAPI_STATUS_THROWS(napi_typeof(env, val, &name##_valuetype) != napi_ok);
+
+#define NAPI_INT32_OPT(name, val, default) \
+  NAPI_TYPEOF(name, val) \
+  int32_t name; \
+  if (name##_valuetype == napi_null || name##_valuetype == napi_undefined) { \
+    name = default; \
+  } else if (napi_get_value_int32(env, val, &name) != napi_ok) { \
+    napi_throw_error(env, "EINVAL", "Expected number"); \
+    return NULL; \
+  }
+
+#define NAPI_ARGV_INT32_OPT(name, i, default) \
+  NAPI_INT32_OPT(name, argv[i], default)
+
+#define NAPI_ARGV_UTF8_OPT(name, size, i, default, default_size) \
+  NAPI_UTF8_OPT(name, size, argv[i], default, default_size)
+
 #define NAPI_EXTERNAL_CAST(type, name, val) \
   type name; \
   if (napi_get_value_external(env, val, (void **) &name) != napi_ok) { \
@@ -50,9 +70,8 @@
 
 NAPI_METHOD(enumerate) {
   NAPI_ARGV(2)
-  // TODO: Needs type protection, eg. null/undefined
-  NAPI_ARGV_INT32(vendor_id, 0)
-  NAPI_ARGV_INT32(product_id, 1)
+  NAPI_ARGV_INT32_OPT(vendor_id, 0, 0)
+  NAPI_ARGV_INT32_OPT(product_id, 1, 0)
 
   char mbs_buffer[1024 + 1];
   struct hid_device_info * device = hid_enumerate(vendor_id, product_id);
