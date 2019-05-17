@@ -186,12 +186,15 @@ NAPI_METHOD(open) {
   NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_INT32(vendor_id, 0)
   NAPI_ARGV_INT32(product_id, 1)
-  NAPI_ARGV_UTF8(serial_number, 1024 + 1, 2)
 
-  wchar_t wide_buffer[sizeof(wchar_t) * 256 + 1];
-  NAPI_RETURN_THROWS(mbstowcs(wide_buffer, serial_number, 1024) < 0, "Failed to convert serial number")
+  wchar_t * wserial_number = NULL;
+  if (argc == 3) {
+    wchar_t wide_buffer[sizeof(wchar_t) * 256 + 1];
+    NAPI_ARGV_UTF8(serial_number, 1024 + 1, 2)
+    NAPI_RETURN_THROWS(mbstowcs(wide_buffer, serial_number, 1024) < 0, "Failed to convert serial number")
+  }
 
-  hid_device * device = hid_open(vendor_id, product_id, wide_buffer);
+  hid_device * device = hid_open(vendor_id, product_id, wserial_number);
 
   NAPI_RETURN_THROWS(device == NULL, "Failed open device")
 
