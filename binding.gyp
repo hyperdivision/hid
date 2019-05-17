@@ -7,7 +7,7 @@
       'target_name': 'hidapi',
       'include_dirs' : [
         '<!(node -e \"require(\'napi-macros\')\")',
-        'hidapi/build/include'
+        'tmp/include'
       ],
       'sources': [
         'index.c'
