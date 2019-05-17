@@ -4,6 +4,7 @@
   #include <windows.h>
 #endif
 #include <stdio.h>
+#include <wchar.h>
 #include <stdlib.h>
 #include <hidapi/hidapi.h>
 
