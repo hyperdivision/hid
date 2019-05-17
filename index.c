@@ -1,7 +1,7 @@
 #include <node_api.h>
 #include <napi-macros.h>
-#ifdef WIN32
-#include <windows.h>
+#ifdef _WIN32
+  #include <windows.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
