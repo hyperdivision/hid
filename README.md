@@ -233,6 +233,23 @@ byte), or calls it with an error.
 npm install hid
 ```
 
+## Contributing
+
+To get setup you need to clone the repo including git submodules.
+`npm install` will run compilation scripts, but require the submodules
+to be initialised.
+
+```sh
+git clone --recurse-submodules git://github.com/hyperdivision/hid.git
+cd hid
+npm run fetch-hidapi # Optional if you forgot --recurse-submodules
+npm install
+
+# Make changes ...
+npm run dev # recompile changes
+npm test # Run standard and run tests
+```
+
 ## License
 
 [ISC](LICENSE)
