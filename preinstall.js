@@ -95,18 +95,15 @@ function buildWindows () {
   var res = path.join(__dirname, 'lib/libhidapi-' + arch + '.dll')
   if (fs.existsSync(res)) return
 
-  spawn('.\\msvc-scripts\\process.bat', [], { cwd: dir, stdio: 'inherit' }, function (err) {
+  var msbuild = findMsBuild()
+  var args = ['/p:Configuration=ReleaseDLL;Platform=' + warch, '/nologo', path.join(dir, 'windows/hidapi.sln')]
+  spawn(msbuild, args, { cwd: dir, stdio: 'inherit' }, function (err) {
     if (err) throw err
-    var msbuild = findMsBuild()
-    var args = ['/p:Configuration=ReleaseDLL;Platform=' + warch, '/nologo']
-    spawn(msbuild, args, { cwd: dir, stdio: 'inherit' }, function (err) {
+
+    var dll = path.join(dir, 'Build/ReleaseDLL/' + warch + '/hidapi.dll')
+
+    fs.rename(dll, res, function (err) {
       if (err) throw err
-
-      var dll = path.join(dir, 'Build/ReleaseDLL/' + warch + '/hidapi.dll')
-
-      fs.rename(dll, res, function (err) {
-        if (err) throw err
-      })
     })
   })
 }
