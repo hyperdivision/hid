@@ -60,7 +60,7 @@
     char err_mbs_buffer[1024 + 1]; \
     const wchar_t* err = hid_error(handle); \
     NAPI_RETURN_THROWS(err == NULL, default); \
-    NAPI_RETURN_THROWS(wcstombs(err_mbs_buffer, err, 1024) 1024) != SIZE_MAX, "Failed convert error"); \
+    NAPI_RETURN_THROWS(wcstombs(err_mbs_buffer, err, 1024) != SIZE_MAX, "Failed convert error"); \
     napi_throw_error(env, NULL, err_mbs_buffer); \
     return NULL; \
   }
