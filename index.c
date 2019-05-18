@@ -21,6 +21,17 @@
   napi_valuetype name##_valuetype; \
   NAPI_STATUS_THROWS(napi_typeof(env, val, &name##_valuetype) != napi_ok);
 
+#define NAPI_ASSERT_TYPED_ARRAY(name, val, message) \
+  bool name##_is_typedarray; \
+  NAPI_STATUS_THROWS(napi_is_typedarray(env, val, &name##_is_typedarray)) \
+  if (name##_is_typedarray == 0) { \
+    napi_throw_type_error(env, NULL, message); \
+    return NULL; \
+  }
+
+#define NAPI_ASSERT_ARGV_TYPED_ARRAY(name, i, message) \
+  NAPI_ASSERT_TYPED_ARRAY(name, argv[i], message)
+
 #define NAPI_INT32_OPT(name, val, default) \
   NAPI_TYPEOF(name, val) \
   int32_t name; \
@@ -217,6 +228,7 @@ NAPI_METHOD(write) {
   NAPI_ARGV(2)
   NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ASSERT_ARGV_TYPED_ARRAY(data, 1, "data must be Buffer")
   NAPI_ARGV_BUFFER_CAST(const unsigned char *, data, 1)
 
   int n = hid_write(handle, data, data_len);
@@ -230,6 +242,7 @@ NAPI_METHOD(read_timeout) {
   NAPI_ARGV(3)
   NAPI_ASSERT_ARGV_MIN(3)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ASSERT_ARGV_TYPED_ARRAY(data, 1, "data must be Buffer")
   NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
   NAPI_ARGV_INT32(milliseconds, 2)
 
@@ -244,6 +257,7 @@ NAPI_METHOD(read) {
   NAPI_ARGV(2)
   NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ASSERT_ARGV_TYPED_ARRAY(data, 1, "data must be Buffer")
   NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
 
   int n = hid_read(handle, data, data_len);
@@ -299,9 +313,9 @@ void async_read_complete(napi_env env, napi_status status, void* data) {
 NAPI_METHOD(read_async) {
   NAPI_ARGV(3)
   NAPI_ASSERT_ARGV_MIN(3)
-  // TODO: Needs type protection, eg. null/undefined
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
   NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
+  NAPI_ASSERT_ARGV_TYPED_ARRAY(data, 1, "data must be Buffer")
   napi_value cb = argv[2];
 
   async_read_request * req = (async_read_request *) malloc(sizeof(async_read_request));
@@ -375,6 +389,7 @@ NAPI_METHOD(read_timeout_async) {
   NAPI_ASSERT_ARGV_MIN(4)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
   NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
+  NAPI_ASSERT_ARGV_TYPED_ARRAY(data, 1, "data must be Buffer")
   NAPI_ARGV_INT32(milliseconds, 2)
   napi_value cb = argv[3];
 
@@ -416,6 +431,7 @@ NAPI_METHOD(send_feature_report) {
   NAPI_ARGV(2)
   NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ASSERT_ARGV_TYPED_ARRAY(data, 1, "data must be Buffer")
   NAPI_ARGV_BUFFER_CAST(const unsigned char *, data, 1)
 
   int n = hid_send_feature_report(handle, data, data_len);
@@ -430,6 +446,7 @@ NAPI_METHOD(get_feature_report) {
   NAPI_ASSERT_ARGV_MIN(2)
   // TODO: Needs type protection, eg. null/undefined
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
+  NAPI_ASSERT_ARGV_TYPED_ARRAY(data, 1, "data must be Buffer")
   NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
 
   int n = hid_get_feature_report(handle, data, data_len);
@@ -488,6 +505,7 @@ NAPI_METHOD(get_feature_report_async) {
   NAPI_ASSERT_ARGV_MIN(3)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
   NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
+  NAPI_ASSERT_ARGV_TYPED_ARRAY(data, 1, "data must be Buffer")
   napi_value cb = argv[2];
 
   async_get_feature_report_request * req = (async_get_feature_report_request *) malloc(sizeof(async_get_feature_report_request));
