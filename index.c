@@ -269,16 +269,18 @@ NAPI_METHOD(read) {
 
 typedef struct async_read_request {
   hid_device * handle;
-  unsigned char * data;
-  size_t data_len;
+  napi_ref data_ref;
   napi_ref cb;
   int n;
   napi_async_work task;
 } async_read_request;
 
-void async_read_execute(napi_env env, void* data) {
-  struct async_read_request * req = (async_read_request *)data;
-  req->n = hid_read(req->handle, req->data, req->data_len);
+void async_read_execute(napi_env env, void* req_v) {
+  struct async_read_request * req = (async_read_request *)req_v;
+  napi_value data_val;
+  NAPI_STATUS_THROWS(napi_get_reference_value(env, req->data_ref, &data_val));
+  NAPI_BUFFER_CAST(unsigned char *, data, data_val)
+  req->n = hid_read(req->handle, data, data_len);
 }
 
 void async_read_complete(napi_env env, napi_status status, void* data) {
@@ -306,6 +308,7 @@ void async_read_complete(napi_env env, napi_status status, void* data) {
   napi_value return_val;
   NAPI_STATUS_THROWS(napi_call_function(env, global, callback, 2, argv, &return_val));
   NAPI_STATUS_THROWS(napi_delete_reference(env, req->cb));
+  NAPI_STATUS_THROWS(napi_delete_reference(env, req->data_ref));
   NAPI_STATUS_THROWS(napi_delete_async_work(env, req->task));
   free(req);
 }
@@ -314,17 +317,15 @@ NAPI_METHOD(read_async) {
   NAPI_ARGV(3)
   NAPI_ASSERT_ARGV_MIN(3)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
-  NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
   NAPI_ASSERT_ARGV_TYPED_ARRAY(data, 1, "data must be Buffer")
+  napi_value data = argv[1];
   napi_value cb = argv[2];
 
   async_read_request * req = (async_read_request *) malloc(sizeof(async_read_request));
   req->handle = handle;
-  req->data = data;
-  req->data_len = data_len;
-
   req->n = 0;
 
+  NAPI_STATUS_THROWS(napi_create_reference(env, data, 1, &req->data_ref));
   NAPI_STATUS_THROWS(napi_create_reference(env, cb, 1, &req->cb));
 
   napi_value async_resource_name;
@@ -342,17 +343,19 @@ NAPI_METHOD(read_async) {
 
 typedef struct async_read_timeout_request {
   hid_device * handle;
-  unsigned char * data;
-  size_t data_len;
+  napi_ref data_ref;
   int milliseconds;
   napi_ref cb;
   int n;
   napi_async_work task;
 } async_read_timeout_request;
 
-void async_read_timeout_execute(napi_env env, void* data) {
-  struct async_read_timeout_request * req = (async_read_timeout_request *)data;
-  req->n = hid_read_timeout(req->handle, req->data, req->data_len, req->milliseconds);
+void async_read_timeout_execute(napi_env env, void* req_v) {
+  struct async_read_timeout_request * req = (async_read_timeout_request *)req_v;
+  napi_value data_val;
+  NAPI_STATUS_THROWS(napi_get_reference_value(env, req->data_ref, &data_val));
+  NAPI_BUFFER_CAST(unsigned char *, data, data_val)
+  req->n = hid_read_timeout(req->handle, data, data_len, req->milliseconds);
 }
 
 void async_read_timeout_complete(napi_env env, napi_status status, void* data) {
@@ -380,6 +383,7 @@ void async_read_timeout_complete(napi_env env, napi_status status, void* data) {
   napi_value return_val;
   NAPI_STATUS_THROWS(napi_call_function(env, global, callback, 2, argv, &return_val));
   NAPI_STATUS_THROWS(napi_delete_reference(env, req->cb));
+  NAPI_STATUS_THROWS(napi_delete_reference(env, req->data_ref));
   NAPI_STATUS_THROWS(napi_delete_async_work(env, req->task));
   free(req);
 }
@@ -388,19 +392,18 @@ NAPI_METHOD(read_timeout_async) {
   NAPI_ARGV(4)
   NAPI_ASSERT_ARGV_MIN(4)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
-  NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
   NAPI_ASSERT_ARGV_TYPED_ARRAY(data, 1, "data must be Buffer")
+  napi_value data = argv[1];
   NAPI_ARGV_INT32(milliseconds, 2)
   napi_value cb = argv[3];
 
   async_read_timeout_request * req = (async_read_timeout_request *) malloc(sizeof(async_read_timeout_request));
   req->handle = handle;
-  req->data = data;
-  req->data_len = data_len;
   req->milliseconds = milliseconds;
   req->n = 0;
 
   NAPI_STATUS_THROWS(napi_create_reference(env, cb, 1, &req->cb));
+  NAPI_STATUS_THROWS(napi_create_reference(env, data, 1, &req->data_ref));
 
   napi_value async_resource_name;
   NAPI_STATUS_THROWS(napi_create_string_utf8(env, "hid:read_timeout_async", NAPI_AUTO_LENGTH, &async_resource_name))
@@ -458,17 +461,19 @@ NAPI_METHOD(get_feature_report) {
 
 typedef struct async_get_feature_report_request {
   hid_device * handle;
-  unsigned char * data;
-  size_t data_len;
+  napi_ref data_ref;
   int milliseconds;
   napi_ref cb;
   int n;
   napi_async_work task;
 } async_get_feature_report_request;
 
-void async_get_feature_report_execute(napi_env env, void* data) {
-  struct async_get_feature_report_request * req = (async_get_feature_report_request *)data;
-  req->n = hid_get_feature_report(req->handle, req->data, req->data_len);
+void async_get_feature_report_execute(napi_env env, void* req_v) {
+  struct async_get_feature_report_request * req = (async_get_feature_report_request *)req_v;
+  napi_value data_val;
+  NAPI_STATUS_THROWS(napi_get_reference_value(env, req->data_ref, &data_val));
+  NAPI_BUFFER_CAST(unsigned char *, data, data_val)
+  req->n = hid_get_feature_report(req->handle, data, data_len);
 }
 
 void async_get_feature_report_complete(napi_env env, napi_status status, void* data) {
@@ -496,6 +501,7 @@ void async_get_feature_report_complete(napi_env env, napi_status status, void* d
   napi_value return_val;
   NAPI_STATUS_THROWS(napi_call_function(env, global, callback, 2, argv, &return_val));
   NAPI_STATUS_THROWS(napi_delete_reference(env, req->cb));
+  NAPI_STATUS_THROWS(napi_delete_reference(env, req->data_ref));
   NAPI_STATUS_THROWS(napi_delete_async_work(env, req->task));
   free(req);
 }
@@ -504,17 +510,16 @@ NAPI_METHOD(get_feature_report_async) {
   NAPI_ARGV(3)
   NAPI_ASSERT_ARGV_MIN(3)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
-  NAPI_ARGV_BUFFER_CAST(unsigned char *, data, 1)
   NAPI_ASSERT_ARGV_TYPED_ARRAY(data, 1, "data must be Buffer")
+  napi_value data = argv[1];
   napi_value cb = argv[2];
 
   async_get_feature_report_request * req = (async_get_feature_report_request *) malloc(sizeof(async_get_feature_report_request));
   req->handle = handle;
-  req->data = data;
-  req->data_len = data_len;
   req->n = 0;
 
   NAPI_STATUS_THROWS(napi_create_reference(env, cb, 1, &req->cb));
+  NAPI_STATUS_THROWS(napi_create_reference(env, data, 1, &req->data_ref));
 
   napi_value async_resource_name;
   NAPI_STATUS_THROWS(napi_create_string_utf8(env, "hid:get_feature_report_async", NAPI_AUTO_LENGTH, &async_resource_name))
