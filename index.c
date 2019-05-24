@@ -121,7 +121,7 @@ NAPI_METHOD(enumerate) {
     NAPI_STATUS_THROWS(napi_create_string_utf8(env, "serial_number", NAPI_AUTO_LENGTH, &serial_number_key))
     napi_value serial_number_value;
 
-    if (wcstombs(mbs_buffer, device->serial_number, 1024) < 0) {
+    if (wcstombs(mbs_buffer, device->serial_number, 1024) != SIZE_MAX) {
       napi_throw_error(env, NULL, "");
       hid_free_enumeration(list);
       return NULL;
@@ -140,7 +140,7 @@ NAPI_METHOD(enumerate) {
     NAPI_STATUS_THROWS(napi_create_string_utf8(env, "manufacturer_string", NAPI_AUTO_LENGTH, &manufacturer_string_key))
     napi_value manufacturer_string_value;
 
-    if (wcstombs(mbs_buffer, device->manufacturer_string, 1024) < 0) {
+    if (wcstombs(mbs_buffer, device->manufacturer_string, 1024) != SIZE_MAX) {
       napi_throw_error(env, NULL, "");
       hid_free_enumeration(list);
       return NULL;
@@ -153,7 +153,7 @@ NAPI_METHOD(enumerate) {
     NAPI_STATUS_THROWS(napi_create_string_utf8(env, "product_string", NAPI_AUTO_LENGTH, &product_string_key))
     napi_value product_string_value;
 
-    if (wcstombs(mbs_buffer, device->product_string, 1024) < 0) {
+    if (wcstombs(mbs_buffer, device->product_string, 1024) != SIZE_MAX) {
       napi_throw_error(env, NULL, "");
       hid_free_enumeration(list);
       return NULL;
