@@ -31,9 +31,9 @@ if (process.argv.indexOf('--print-lib') > -1) {
     case 'linux':
       console.log(path.join(__dirname, 'lib/libhidapi-' + arch + '.so'))
       break
-    case 'win32':
-      console.log('../hidapi/Build/ReleaseDLL/' + warch + '/libhidapi.lib')
-      break
+    // case 'win32':
+    //   console.log('../hidapi/Build/ReleaseDLL/' + warch + '/libhidapi.lib')
+    //   break
     default:
       process.exit(1)
   }
@@ -49,8 +49,11 @@ switch (os.platform()) {
     break
 
   case 'win32':
+    console.error('This platform is currently unsupported')
+    process.exit(1)
+    /* eslint-disable-next-line */
     buildWindows()
-    break
+    // break
 
   default:
     buildUnix('so', function (err) {

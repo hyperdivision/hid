@@ -59,15 +59,15 @@
             }]
           ],
         }],
-        [ 'OS=="win"', {
-          'msvs_settings': {
-            'VCLinkerTool': {
-              'AdditionalDependencies': [
-                'setupapi.lib'
-              ]
-            }
-          }
-        }]
+        # [ 'OS=="win"', {
+        #   'msvs_settings': {
+        #     'VCLinkerTool': {
+        #       'AdditionalDependencies': [
+        #         'setupapi.lib'
+        #       ]
+        #     }
+        #   }
+        # }]
       ],
     }
   ]
