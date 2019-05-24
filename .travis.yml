@@ -22,16 +22,14 @@ before_deploy:
   - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then npm run prebuild-ia32; ARCHIVE_NAME="${TRAVIS_TAG:-latest}-$TRAVIS_OS_NAME-all.tar";  fi
   - tar --create --verbose --file="$ARCHIVE_NAME" --directory "$TRAVIS_BUILD_DIR/prebuilds" .
 
-jobs:
-  include:
-    - stage: github release
-      provider: releases
-      draft: false
-      prerelease: true
-      api_key:
-        secure: "ThF96hUpAuHyLTAeoto63MVpiDxzAVN7mROQ94L0k9Qm+AiBHPtO2v2hpfu49C5pgsVW3or/cXK4u9dkFoNX/mzPJfGaZy3MB4bJgzFZnydrStIEwsf5uiZAzQqKUgammrdpN7/AXazK/4w0VAaUz24Qe1fIMovkbbdjsx4oOHmPlqgH9U1jWDJz7Oi1vc5iOdIZpKYibiJveO9hOAbz999wQ/3502Up6Gzn43Toanth5GN4KN2IjAcne0HgvAZUORnzUreMgfKnKfxO6ZElGe1fimVh7HMotcD8pVNZNjsw/aY3JXXN+wOv3ywUENQTPaTMsd5QzqwfR/S5Ze993w+AqMyQUEZGw32dkTvQp5fMAftcOzIPnTf/Uuc70KJh52od+Jx4Vig826bKRxvRuJc6n3NRb+TNX+mnPmtNVKetetRchVX1NjT/V8V54X/Qdc/wTVoC6o55GDBpaTNtdg6gjttZd35oZgaz6Nq4iSIopIfFPclCIUDdyQGvNazyvH2uEP853t7pu1Pbrey+YvG2mxoBVsogCwPmx5IbXfA0QauKGQlVs8xAV4kEP9tCuT4mowPLLO3CALospOHemFZpgDzQggoYO93GG71bME1dKyysJwjOpe9plg2AGiVgL4v9rca6gustRqHYXnNPtmeCG9UaO9af1ngFXOd4ois="
-      file: "$ARCHIVE_NAME"
-      skip_cleanup: true
-      on:
-        tags: true
-        node: node
+deploy:
+  provider: releases
+  draft: false
+  prerelease: true
+  api_key:
+    secure: "ThF96hUpAuHyLTAeoto63MVpiDxzAVN7mROQ94L0k9Qm+AiBHPtO2v2hpfu49C5pgsVW3or/cXK4u9dkFoNX/mzPJfGaZy3MB4bJgzFZnydrStIEwsf5uiZAzQqKUgammrdpN7/AXazK/4w0VAaUz24Qe1fIMovkbbdjsx4oOHmPlqgH9U1jWDJz7Oi1vc5iOdIZpKYibiJveO9hOAbz999wQ/3502Up6Gzn43Toanth5GN4KN2IjAcne0HgvAZUORnzUreMgfKnKfxO6ZElGe1fimVh7HMotcD8pVNZNjsw/aY3JXXN+wOv3ywUENQTPaTMsd5QzqwfR/S5Ze993w+AqMyQUEZGw32dkTvQp5fMAftcOzIPnTf/Uuc70KJh52od+Jx4Vig826bKRxvRuJc6n3NRb+TNX+mnPmtNVKetetRchVX1NjT/V8V54X/Qdc/wTVoC6o55GDBpaTNtdg6gjttZd35oZgaz6Nq4iSIopIfFPclCIUDdyQGvNazyvH2uEP853t7pu1Pbrey+YvG2mxoBVsogCwPmx5IbXfA0QauKGQlVs8xAV4kEP9tCuT4mowPLLO3CALospOHemFZpgDzQggoYO93GG71bME1dKyysJwjOpe9plg2AGiVgL4v9rca6gustRqHYXnNPtmeCG9UaO9af1ngFXOd4ois="
+  file: "$ARCHIVE_NAME"
+  skip_cleanup: true
+  on:
+    tags: true
+    node: 'node'
