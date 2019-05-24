@@ -45,19 +45,10 @@
           }
         }],
         [ 'OS=="linux"', {
-          'conditions': [
-            [ 'driver=="libusb"', {
-              'libraries': [
-                '-lusb-1.0'
-              ]
-            }],
-            [ 'driver=="hidraw"', {
-              'libraries': [
-                '-ludev',
-                '-lusb-1.0'
-              ]
-            }]
-          ],
+          'libraries': [
+            '-ludev',
+            '-lusb-1.0'
+          ]
         }],
         # [ 'OS=="win"', {
         #   'msvs_settings': {

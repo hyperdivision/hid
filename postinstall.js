@@ -39,9 +39,9 @@ function buildWindows () {
 }
 
 function buildUnix () {
-  var lib = fs.realpathSync(path.join(__dirname, 'lib/libhidapi-' + arch + '.so'))
+  var lib = fs.realpathSync(path.join(__dirname, 'lib/libhidapi-hidraw-' + arch + '.so'))
 
-  var la = ini.decode(fs.readFileSync(path.join(tmp, 'lib/libhidapi.la')).toString())
+  var la = ini.decode(fs.readFileSync(path.join(tmp, 'lib/libhidapi-hidraw.la')).toString())
   var dst = path.join(build, la.dlname)
 
   if (fs.existsSync(dst)) return

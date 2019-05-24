@@ -29,7 +29,7 @@ if (process.argv.indexOf('--print-lib') > -1) {
     case 'openbsd':
     case 'freebsd':
     case 'linux':
-      console.log(path.join(__dirname, 'lib/libhidapi-' + arch + '.so'))
+      console.log(path.join(__dirname, 'lib/libhidapi-hidraw-' + arch + '.so'))
       break
     // case 'win32':
     //   console.log('../hidapi/Build/ReleaseDLL/' + warch + '/libhidapi.lib')
@@ -112,7 +112,7 @@ function buildWindows () {
 }
 
 function buildUnix (ext, cb) {
-  var res = path.join(__dirname, 'lib/libhidapi-' + arch + '.' + ext)
+  var res = path.join(__dirname, 'lib/libhidapi-hidraw-' + arch + '.' + ext)
   if (fs.existsSync(res)) return cb(null, res)
 
   spawn('./bootstrap', [], { cwd: dir, stdio: 'inherit' }, function (err) {
@@ -124,7 +124,7 @@ function buildUnix (ext, cb) {
         spawn('make', ['install'], { cwd: dir, stdio: 'inherit' }, function (err) {
           if (err) throw err
 
-          var la = ini.decode(fs.readFileSync(path.join(tmp, 'lib/libhidapi.la')).toString())
+          var la = ini.decode(fs.readFileSync(path.join(tmp, 'lib/libhidapi-hidraw.la')).toString())
 
           var lib = fs.realpathSync(path.join(la.libdir, la.dlname))
           fs.rename(lib, res, function (err) {
