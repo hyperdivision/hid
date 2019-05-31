@@ -56,7 +56,7 @@ switch (os.platform()) {
     // break
 
   default:
-    buildUnix('so', function (err) {
+    buildUnix('hidraw', 'so', function (err) {
       if (err) throw err
     })
     break
@@ -111,8 +111,8 @@ function buildWindows () {
   })
 }
 
-function buildUnix (ext, cb) {
-  var res = path.join(__dirname, 'lib/libhidapi-hidraw-' + arch + '.' + ext)
+function buildUnix (driver, ext, cb) {
+  var res = path.join(__dirname, `lib/libhidapi-${driver != null ? driver + '-' : ''}` + arch + '.' + ext)
   if (fs.existsSync(res)) return cb(null, res)
 
   spawn('./bootstrap', [], { cwd: dir, stdio: 'inherit' }, function (err) {
@@ -124,7 +124,7 @@ function buildUnix (ext, cb) {
         spawn('make', ['install'], { cwd: dir, stdio: 'inherit' }, function (err) {
           if (err) throw err
 
-          var la = ini.decode(fs.readFileSync(path.join(tmp, 'lib/libhidapi-hidraw.la')).toString())
+          var la = ini.decode(fs.readFileSync(path.join(tmp, `lib/libhidapi${driver != null ? '-' + driver : ''}.la`)).toString())
 
           var lib = fs.realpathSync(path.join(la.libdir, la.dlname))
           fs.rename(lib, res, function (err) {
@@ -138,7 +138,7 @@ function buildUnix (ext, cb) {
 }
 
 function buildDarwin () {
-  buildUnix('dylib', function (err, res) {
+  buildUnix(null, 'dylib', function (err, res) {
     if (err) throw err
     spawn('install_name_tool', ['-id', res, res], { stdio: 'inherit' }, function (err) {
       if (err) throw err
