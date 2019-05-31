@@ -106,27 +106,18 @@ NAPI_METHOD(napi_hid_enumerate) {
     napi_value device_obj;
     NAPI_STATUS_THROWS(napi_create_object(env, &device_obj))
 
-    napi_value path_key;
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env, "path", NAPI_AUTO_LENGTH, &path_key))
     napi_value path_value;
     NAPI_STATUS_THROWS(napi_create_string_utf8(env, device->path, NAPI_AUTO_LENGTH, &path_value))
-    NAPI_STATUS_THROWS(napi_set_property(env, device_obj, path_key, path_value))
+    NAPI_STATUS_THROWS(napi_set_named_property(env, device_obj, "path", path_value))
 
-    napi_value vendor_id_key;
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env, "vendor_id", NAPI_AUTO_LENGTH, &vendor_id_key))
     napi_value vendor_id_value;
     NAPI_STATUS_THROWS(napi_create_uint32(env, device->vendor_id, &vendor_id_value))
-    NAPI_STATUS_THROWS(napi_set_property(env, device_obj, vendor_id_key, vendor_id_value))
+    NAPI_STATUS_THROWS(napi_set_named_property(env, device_obj, "vendor_id", vendor_id_value))
 
-    napi_value product_id_key;
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env, "product_id", NAPI_AUTO_LENGTH, &product_id_key))
     napi_value product_id_value;
     NAPI_STATUS_THROWS(napi_create_uint32(env, device->product_id, &product_id_value))
-    NAPI_STATUS_THROWS(napi_set_property(env, device_obj, product_id_key, product_id_value))
+    NAPI_STATUS_THROWS(napi_set_named_property(env, device_obj, "product_id", product_id_value))
 
-    napi_value serial_number_key;
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env, "serial_number", NAPI_AUTO_LENGTH, &serial_number_key))
-    napi_value serial_number_value;
 
     if (wcstombs(mbs_buffer, device->serial_number, 1024) == SIZE_MAX) {
       napi_throw_error(env, NULL, "serial_number");
@@ -134,18 +125,14 @@ NAPI_METHOD(napi_hid_enumerate) {
       return NULL;
     }
 
+    napi_value serial_number_value;
     NAPI_STATUS_THROWS(napi_create_string_utf8(env, mbs_buffer, NAPI_AUTO_LENGTH, &serial_number_value))
-    NAPI_STATUS_THROWS(napi_set_property(env, device_obj, serial_number_key, serial_number_value))
+    NAPI_STATUS_THROWS(napi_set_named_property(env, device_obj, "serial_number", serial_number_value))
 
-    napi_value release_number_key;
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env, "release_number", NAPI_AUTO_LENGTH, &release_number_key))
     napi_value release_number_value;
     NAPI_STATUS_THROWS(napi_create_uint32(env, device->release_number, &release_number_value))
-    NAPI_STATUS_THROWS(napi_set_property(env, device_obj, release_number_key, release_number_value))
+    NAPI_STATUS_THROWS(napi_set_named_property(env, device_obj, "release_number", release_number_value))
 
-    napi_value manufacturer_string_key;
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env, "manufacturer_string", NAPI_AUTO_LENGTH, &manufacturer_string_key))
-    napi_value manufacturer_string_value;
 
     if (wcstombs(mbs_buffer, device->manufacturer_string, 1024) == SIZE_MAX) {
       napi_throw_error(env, NULL, "manufacturer_string");
@@ -153,12 +140,10 @@ NAPI_METHOD(napi_hid_enumerate) {
       return NULL;
     }
 
+    napi_value manufacturer_string_value;
     NAPI_STATUS_THROWS(napi_create_string_utf8(env, mbs_buffer, NAPI_AUTO_LENGTH, &manufacturer_string_value))
-    NAPI_STATUS_THROWS(napi_set_property(env, device_obj, manufacturer_string_key, manufacturer_string_value))
+    NAPI_STATUS_THROWS(napi_set_named_property(env, device_obj, "manufacturer_string", manufacturer_string_value))
 
-    napi_value product_string_key;
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env, "product_string", NAPI_AUTO_LENGTH, &product_string_key))
-    napi_value product_string_value;
 
     if (wcstombs(mbs_buffer, device->product_string, 1024) == SIZE_MAX) {
       napi_throw_error(env, NULL, "product_string");
@@ -166,26 +151,21 @@ NAPI_METHOD(napi_hid_enumerate) {
       return NULL;
     }
 
+    napi_value product_string_value;
     NAPI_STATUS_THROWS(napi_create_string_utf8(env, mbs_buffer, NAPI_AUTO_LENGTH, &product_string_value))
-    NAPI_STATUS_THROWS(napi_set_property(env, device_obj, product_string_key, product_string_value))
+    NAPI_STATUS_THROWS(napi_set_named_property(env, device_obj, "product_string", product_string_value))
 
-    napi_value usage_page_key;
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env, "usage_page", NAPI_AUTO_LENGTH, &usage_page_key))
     napi_value usage_page_value;
     NAPI_STATUS_THROWS(napi_create_uint32(env, device->usage_page, &usage_page_value))
-    NAPI_STATUS_THROWS(napi_set_property(env, device_obj, usage_page_key, usage_page_value))
+    NAPI_STATUS_THROWS(napi_set_named_property(env, device_obj, "usage_page", usage_page_value))
 
-    napi_value usage_key;
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env, "usage", NAPI_AUTO_LENGTH, &usage_key))
     napi_value usage_value;
     NAPI_STATUS_THROWS(napi_create_uint32(env, device->usage, &usage_value))
-    NAPI_STATUS_THROWS(napi_set_property(env, device_obj, usage_key, usage_value))
+    NAPI_STATUS_THROWS(napi_set_named_property(env, device_obj, "usage", usage_value))
 
-    napi_value interface_number_key;
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env, "interface_number", NAPI_AUTO_LENGTH, &interface_number_key))
     napi_value interface_number_value;
     NAPI_STATUS_THROWS(napi_create_int32(env, device->interface_number, &interface_number_value))
-    NAPI_STATUS_THROWS(napi_set_property(env, device_obj, interface_number_key, interface_number_value))
+    NAPI_STATUS_THROWS(napi_set_named_property(env, device_obj, "interface_number", interface_number_value))
 
     NAPI_STATUS_THROWS(napi_set_element(env, devices, i++, device_obj))
   } while ((device = device->next) != NULL);
