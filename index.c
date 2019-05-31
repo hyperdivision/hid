@@ -79,7 +79,14 @@
 #define NAPI_ASSERT_ARGV_MIN(n) \
   NAPI_RETURN_THROWS(argc < n, "Unsufficient arguments provided. Expected " #n)
 
-NAPI_METHOD(enumerate) {
+#define NAPI_EXPORT_NAMED_FUNCTION(key, name) \
+  { \
+    napi_value name##_fn; \
+    NAPI_STATUS_THROWS(napi_create_function(env, key, NAPI_AUTO_LENGTH, name, NULL, &name##_fn)) \
+    NAPI_STATUS_THROWS(napi_set_named_property(env, exports, key, name##_fn)) \
+  }
+
+NAPI_METHOD(napi_hid_enumerate) {
   NAPI_ARGV(2)
   NAPI_ARGV_INT32_OPT(vendor_id, 0, 0)
   NAPI_ARGV_INT32_OPT(product_id, 1, 0)
@@ -188,11 +195,11 @@ NAPI_METHOD(enumerate) {
   return devices;
 }
 
-void device_finalizer (napi_env env, void* finalize_data, void* finalize_hint) {
+void napi_hid_device_finalizer (napi_env env, void* finalize_data, void* finalize_hint) {
   hid_close((hid_device *) finalize_data);
 }
 
-NAPI_METHOD(open) {
+NAPI_METHOD(napi_hid_open) {
   NAPI_ARGV(3)
   NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_INT32(vendor_id, 0)
@@ -209,10 +216,10 @@ NAPI_METHOD(open) {
 
   NAPI_RETURN_THROWS(device == NULL, "Failed open device")
 
-  NAPI_RETURN_EXTERNAL(device, device_finalizer, NULL)
+  NAPI_RETURN_EXTERNAL(device, napi_hid_device_finalizer, NULL)
 }
 
-NAPI_METHOD(open_path) {
+NAPI_METHOD(napi_hid_open_path) {
   NAPI_ARGV(1)
   NAPI_ASSERT_ARGV_MIN(1)
   NAPI_ARGV_UTF8(path, 1024 + 1, 0)
@@ -221,10 +228,10 @@ NAPI_METHOD(open_path) {
 
   NAPI_RETURN_THROWS(device == NULL, "Failed open_path device")
 
-  NAPI_RETURN_EXTERNAL(device, device_finalizer, NULL)
+  NAPI_RETURN_EXTERNAL(device, napi_hid_device_finalizer, NULL)
 }
 
-NAPI_METHOD(write) {
+NAPI_METHOD(napi_hid_write) {
   NAPI_ARGV(2)
   NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
@@ -238,7 +245,7 @@ NAPI_METHOD(write) {
   NAPI_RETURN_INT32(n)
 }
 
-NAPI_METHOD(read_timeout) {
+NAPI_METHOD(napi_hid_read_timeout) {
   NAPI_ARGV(3)
   NAPI_ASSERT_ARGV_MIN(3)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
@@ -253,7 +260,7 @@ NAPI_METHOD(read_timeout) {
   NAPI_RETURN_INT32(n)
 }
 
-NAPI_METHOD(read) {
+NAPI_METHOD(napi_hid_read) {
   NAPI_ARGV(2)
   NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
@@ -313,7 +320,7 @@ void async_read_complete(napi_env env, napi_status status, void* data) {
   free(req);
 }
 
-NAPI_METHOD(read_async) {
+NAPI_METHOD(napi_hid_read_async) {
   NAPI_ARGV(3)
   NAPI_ASSERT_ARGV_MIN(3)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
@@ -388,7 +395,7 @@ void async_read_timeout_complete(napi_env env, napi_status status, void* data) {
   free(req);
 }
 
-NAPI_METHOD(read_timeout_async) {
+NAPI_METHOD(napi_hid_read_timeout_async) {
   NAPI_ARGV(4)
   NAPI_ASSERT_ARGV_MIN(4)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
@@ -417,7 +424,7 @@ NAPI_METHOD(read_timeout_async) {
   return NULL;
 }
 
-NAPI_METHOD(set_nonblocking) {
+NAPI_METHOD(napi_hid_set_nonblocking) {
   NAPI_ARGV(2)
   NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
@@ -430,7 +437,7 @@ NAPI_METHOD(set_nonblocking) {
   return NULL;
 }
 
-NAPI_METHOD(send_feature_report) {
+NAPI_METHOD(napi_hid_send_feature_report) {
   NAPI_ARGV(2)
   NAPI_ASSERT_ARGV_MIN(2)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
@@ -444,7 +451,7 @@ NAPI_METHOD(send_feature_report) {
   NAPI_RETURN_INT32(n)
 }
 
-NAPI_METHOD(get_feature_report) {
+NAPI_METHOD(napi_hid_get_feature_report) {
   NAPI_ARGV(2)
   NAPI_ASSERT_ARGV_MIN(2)
   // TODO: Needs type protection, eg. null/undefined
@@ -506,7 +513,7 @@ void async_get_feature_report_complete(napi_env env, napi_status status, void* d
   free(req);
 }
 
-NAPI_METHOD(get_feature_report_async) {
+NAPI_METHOD(napi_hid_get_feature_report_async) {
   NAPI_ARGV(3)
   NAPI_ASSERT_ARGV_MIN(3)
   NAPI_ARGV_EXTERNAL_CAST(hid_device *, handle, 0)
@@ -539,18 +546,18 @@ NAPI_INIT() {
     return;
   }
 
-  NAPI_EXPORT_FUNCTION(enumerate);
-  NAPI_EXPORT_FUNCTION(open);
-  NAPI_EXPORT_FUNCTION(open_path);
-  NAPI_EXPORT_FUNCTION(write);
-  NAPI_EXPORT_FUNCTION(read_timeout);
-  NAPI_EXPORT_FUNCTION(read);
-  NAPI_EXPORT_FUNCTION(read_timeout_async);
-  NAPI_EXPORT_FUNCTION(read_async);
-  NAPI_EXPORT_FUNCTION(set_nonblocking);
-  NAPI_EXPORT_FUNCTION(send_feature_report);
-  NAPI_EXPORT_FUNCTION(get_feature_report);
-  NAPI_EXPORT_FUNCTION(get_feature_report_async);
+  NAPI_EXPORT_NAMED_FUNCTION("enumerate", napi_hid_enumerate);
+  NAPI_EXPORT_NAMED_FUNCTION("open", napi_hid_open);
+  NAPI_EXPORT_NAMED_FUNCTION("open_path", napi_hid_open_path);
+  NAPI_EXPORT_NAMED_FUNCTION("write", napi_hid_write);
+  NAPI_EXPORT_NAMED_FUNCTION("read_timeout", napi_hid_read_timeout);
+  NAPI_EXPORT_NAMED_FUNCTION("read", napi_hid_read);
+  NAPI_EXPORT_NAMED_FUNCTION("read_timeout_async", napi_hid_read_timeout_async);
+  NAPI_EXPORT_NAMED_FUNCTION("read_async", napi_hid_read_async);
+  NAPI_EXPORT_NAMED_FUNCTION("set_nonblocking", napi_hid_set_nonblocking);
+  NAPI_EXPORT_NAMED_FUNCTION("send_feature_report", napi_hid_send_feature_report);
+  NAPI_EXPORT_NAMED_FUNCTION("get_feature_report", napi_hid_get_feature_report);
+  NAPI_EXPORT_NAMED_FUNCTION("get_feature_report_async", napi_hid_get_feature_report_async);
 
 
   NAPI_STATUS_THROWS(napi_add_env_cleanup_hook(env, (void *)hid_exit, NULL));
