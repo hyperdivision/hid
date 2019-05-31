@@ -19,7 +19,7 @@
 
 #define NAPI_TYPEOF(name, val) \
   napi_valuetype name##_valuetype; \
-  NAPI_STATUS_THROWS(napi_typeof(env, val, &name##_valuetype) != napi_ok);
+  NAPI_STATUS_THROWS(napi_typeof(env, val, &name##_valuetype));
 
 #define NAPI_ASSERT_TYPED_ARRAY(name, val, message) \
   bool name##_is_typedarray; \
@@ -71,7 +71,7 @@
     char err_mbs_buffer[1024 + 1]; \
     const wchar_t* err = hid_error(handle); \
     NAPI_RETURN_THROWS(err == NULL, default); \
-    NAPI_RETURN_THROWS(wcstombs(err_mbs_buffer, err, 1024) != SIZE_MAX, "Failed convert error"); \
+    NAPI_RETURN_THROWS(wcstombs(err_mbs_buffer, err, 1024) == SIZE_MAX, "Failed convert error"); \
     napi_throw_error(env, NULL, err_mbs_buffer); \
     return NULL; \
   }
@@ -128,8 +128,8 @@ NAPI_METHOD(napi_hid_enumerate) {
     NAPI_STATUS_THROWS(napi_create_string_utf8(env, "serial_number", NAPI_AUTO_LENGTH, &serial_number_key))
     napi_value serial_number_value;
 
-    if (wcstombs(mbs_buffer, device->serial_number, 1024) != SIZE_MAX) {
-      napi_throw_error(env, NULL, "");
+    if (wcstombs(mbs_buffer, device->serial_number, 1024) == SIZE_MAX) {
+      napi_throw_error(env, NULL, "serial_number");
       hid_free_enumeration(list);
       return NULL;
     }
@@ -147,8 +147,8 @@ NAPI_METHOD(napi_hid_enumerate) {
     NAPI_STATUS_THROWS(napi_create_string_utf8(env, "manufacturer_string", NAPI_AUTO_LENGTH, &manufacturer_string_key))
     napi_value manufacturer_string_value;
 
-    if (wcstombs(mbs_buffer, device->manufacturer_string, 1024) != SIZE_MAX) {
-      napi_throw_error(env, NULL, "");
+    if (wcstombs(mbs_buffer, device->manufacturer_string, 1024) == SIZE_MAX) {
+      napi_throw_error(env, NULL, "manufacturer_string");
       hid_free_enumeration(list);
       return NULL;
     }
@@ -160,8 +160,8 @@ NAPI_METHOD(napi_hid_enumerate) {
     NAPI_STATUS_THROWS(napi_create_string_utf8(env, "product_string", NAPI_AUTO_LENGTH, &product_string_key))
     napi_value product_string_value;
 
-    if (wcstombs(mbs_buffer, device->product_string, 1024) != SIZE_MAX) {
-      napi_throw_error(env, NULL, "");
+    if (wcstombs(mbs_buffer, device->product_string, 1024) == SIZE_MAX) {
+      napi_throw_error(env, NULL, "product_string");
       hid_free_enumeration(list);
       return NULL;
     }
@@ -209,7 +209,7 @@ NAPI_METHOD(napi_hid_open) {
   if (argc == 3) {
     wchar_t wide_buffer[sizeof(wchar_t) * 256 + 1];
     NAPI_ARGV_UTF8(serial_number, 1024 + 1, 2)
-    NAPI_RETURN_THROWS(mbstowcs(wide_buffer, serial_number, 1024) != SIZE_MAX, "Failed to convert serial number")
+    NAPI_RETURN_THROWS(mbstowcs(wide_buffer, serial_number, sizeof(wchar_t) * 256) == SIZE_MAX, "Failed to convert serial number")
   }
 
   hid_device * device = hid_open(vendor_id, product_id, wserial_number);
