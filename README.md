@@ -4,8 +4,6 @@
 
 > Low-level bindings for USB/Bluetooth hidapi
 
-**NOTE** Currently does not support Windows
-
 ## Usage
 
 ```js
