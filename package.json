@@ -25,7 +25,7 @@
     "fetch-hidapi": "git submodule update --recursive --init",
     "install": "node-gyp-build \"node preinstall.js\" \"node postinstall.js\"",
     "prebuild": "prebuildify --napi --strip --preinstall \"node preinstall.js\" --postinstall \"node postinstall.js\"",
-    "prebuild-ia32": "prebuildify --napi --strip --preinstall \"node preinstall.js\" --postinstall \"node postinstall.js\" --arch=ia32"
+    "prebuild-ia32": "prebuildify --arch=ia32 --napi --strip --preinstall \"node preinstall.js\" --postinstall \"node postinstall.js\""
   },
   "repository": {
     "type": "git",
