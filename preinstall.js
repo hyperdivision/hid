@@ -49,11 +49,8 @@ switch (os.platform()) {
     break
 
   case 'win32':
-    console.error('This platform is currently unsupported')
-    process.exit(1)
-    /* eslint-disable-next-line */
     buildWindows()
-    // break
+    break
 
   default:
     buildUnix('hidraw', 'so', function (err) {

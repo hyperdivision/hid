@@ -12,9 +12,6 @@ var arch = process.env.ARCH || os.arch()
 
 switch (os.platform()) {
   case 'win32':
-    console.error('This platform is currently unsupported')
-    process.exit(1)
-    /* eslint-disable-next-line */
     buildWindows()
     break
 
