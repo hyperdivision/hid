@@ -7,7 +7,7 @@
       'target_name': 'hidapi',
       'include_dirs' : [
         '<!(node -e \"require(\'napi-macros\')\")',
-        'tmp/include'
+        'hidapi'
       ],
       'sources': [
         'index.c'
@@ -49,16 +49,7 @@
             '-ludev',
             '-lusb-1.0'
           ]
-        }],
-        # [ 'OS=="win"', {
-        #   'msvs_settings': {
-        #     'VCLinkerTool': {
-        #       'AdditionalDependencies': [
-        #         'setupapi.lib'
-        #       ]
-        #     }
-        #   }
-        # }]
+        }]
       ],
     }
   ]

@@ -31,9 +31,9 @@ if (process.argv.indexOf('--print-lib') > -1) {
     case 'linux':
       console.log(path.join(__dirname, 'lib/libhidapi-hidraw-' + arch + '.so'))
       break
-    // case 'win32':
-    //   console.log('../hidapi/Build/ReleaseDLL/' + warch + '/libhidapi.lib')
-    //   break
+    case 'win32':
+      console.log('../hidapi/Build/Release/' + warch + '/libhidapi.lib')
+      break
     default:
       process.exit(1)
   }
@@ -99,11 +99,11 @@ function buildWindows () {
   if (fs.existsSync(res)) return
 
   var msbuild = findMsBuild()
-  var args = ['/p:Configuration=ReleaseDLL;Platform=' + warch, '/nologo', path.join(dir, 'windows/hidapi.sln')]
-  spawn(msbuild, args, { cwd: dir, stdio: 'inherit' }, function (err) {
+  var args = ['/p:Configuration=Release;Platform=' + warch, '/nologo']
+  spawn(msbuild, args, { cwd: path.join(__dirname, 'msvc'), stdio: 'inherit' }, function (err) {
     if (err) throw err
 
-    var dll = path.join(dir, 'Build/ReleaseDLL/' + warch + '/hidapi.dll')
+    var dll = path.join(dir, 'Build/Release/' + warch + '/libhidapi.dll')
 
     fs.rename(dll, res, function (err) {
       if (err) throw err

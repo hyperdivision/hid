@@ -5,7 +5,7 @@ node_js:
 os:
   - osx
   - linux
-# - windows
+  - windows
 
 before_install:
   - npm run fetch-hidapi

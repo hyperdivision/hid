@@ -21,7 +21,7 @@
     "pretest": "standard",
     "test": "node test.js",
     "dev": "node-gyp build",
-    "clean": "rm -rf build tmp lib",
+    "clean": "rm -rf build tmp lib hidapi/Build",
     "fetch-hidapi": "git submodule update --recursive --init",
     "install": "node-gyp-build \"node preinstall.js\" \"node postinstall.js\"",
     "prebuild": "prebuildify --napi --strip --preinstall \"node preinstall.js\" --postinstall \"node postinstall.js\"",
