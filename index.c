@@ -187,7 +187,7 @@ NAPI_METHOD(napi_hid_open) {
 
   wchar_t * wserial_number = NULL;
   if (argc == 3) {
-    wchar_t wide_buffer[sizeof(wchar_t) * 256 + 1];
+    wchar_t wide_buffer[sizeof(wchar_t) * 257];
     NAPI_ARGV_UTF8(serial_number, 1024 + 1, 2)
     NAPI_RETURN_THROWS(mbstowcs(wide_buffer, serial_number, sizeof(wchar_t) * 256) == SIZE_MAX, "Failed to convert serial number")
   }
